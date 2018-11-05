@@ -139,19 +139,19 @@ class MainWindow(QWidget):
         label = self.name_input.toPlainText()
 
         # 判断输入框中是否有异常字符
-        # if label != 0:
-        #     print('请输入正确字符！！！')
+        if label:
+            if not os.path.exists(facePath + label):
+                os.makedirs(facePath + label)
+            time_now = datetime.datetime.now().strftime('%H%M%S')
+            faceDir = facePath + label + '/' + label + '_' + time_now + '.jpg'
+            cv2.imwrite(faceDir, self.cap_face)
 
-        if not os.path.exists(facePath + label):
-            os.makedirs(facePath + label)
-        time_now = datetime.datetime.now().strftime('%H%M%S')
-        faceDir = facePath + label +'/' + label + '_' + time_now + '.jpg'
-        cv2.imwrite(faceDir, self.cap_face)
-
-        save_flag = self.detector.face_save(self.cap_face, label)
-        if save_flag:
-            self.name_input.setPlainText('')
-            self.label_save_face.clear()
+            save_flag = self.detector.face_save(self.cap_face, label)
+            if save_flag:
+                self.name_input.setPlainText('')
+                self.label_save_face.clear()
+        else:
+            print('请输入正确字符！！！')
 
 
     def closeEvent(self, QCloseEvent):
