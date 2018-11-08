@@ -11,6 +11,7 @@ person_face_csv = './person_face_data.csv'
 facePath = './person_faces/'
 threshold = 0.5
 
+
 class FaceClassifier():
     def __init__(self, classifier='cnn'):
 
