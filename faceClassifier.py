@@ -32,6 +32,8 @@ class FaceClassifier():
             self.person_face_data = self.read_face_data() #二维list
         else:
             self.person_face_data = pd.read_csv(person_face_csv).values.tolist()
+            for i in range(len( self.person_face_data)):
+                self.person_face_data[i][2] = eval(self.person_face_data[i][2])
         print("#########", self.person_face_data)
 
     def reco_cv2(self, img):
@@ -75,7 +77,10 @@ class FaceClassifier():
                 y2 = d.right() if d.right() > 0 else 0
                 cv2.rectangle(show_1, (x2, x1), (y2, y1), (0, 255, 0), 2)  # 画出人脸
 
+                # start = datetime.datetime.now()
                 label = self.get_face_name(show_1[x1:y1, x2:y2])
+                # end = datetime.datetime.now()
+                # print('识别人脸耗时： ', (end-start).microseconds)
                 cv2.putText(show_1, str(label), (x2, x1), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2, cv2.LINE_AA)
 
         elif self.detect_class == "cnn":
@@ -115,10 +120,13 @@ class FaceClassifier():
 
     #返回一张图像多张人脸的 128D 特征, 输入img为分割后的人脸图像
     def get_128d_features(self, img):
+
         sp = self.sp(img, dlib.rectangle(0, 0, img.shape[1], img.shape[0]))
-        print(dlib.rectangle(0, 0, img.shape[1], img.shape[0]))
-        face_descriptor = self.facerec.compute_face_descriptor(img, sp)
-        print('--------', np.array(face_descriptor).reshape((1, 128)).tolist()[0])
+        # sp = self.sp(img, self.detector(img, 1)[0])
+                     # print(dlib.rectangle(0, 0, img.shape[1], img.shape[0]))
+        start = datetime.datetime.now()
+        face_descriptor = self.facerec.compute_face_descriptor(img, sp) #这个过程比较花时间
+        print ('e.min(): ',(datetime.datetime.now() - start).microseconds)
 
         return np.array(face_descriptor).reshape((1, 128)).tolist()[0] #以list格式返回
 
@@ -142,16 +150,18 @@ class FaceClassifier():
 
 
     def get_face_name(self, face):
-        total_faces_arr = np.array([eval(person[2]) for person in self.person_face_data]) #array 格式
+        # if len(face)
+        # total_faces_arr = np.array([eval(person[2]) for person in self.person_face_data]) #array 格式
+        total_faces_arr = np.array([person[2] for person in self.person_face_data])
         one_face_arr = np.array(self.get_128d_features(face))
-
         temp = one_face_arr - total_faces_arr
+
         e = np.linalg.norm(temp, axis=1, keepdims=True)
+
         min_distance = e.min()
         print("distance: ", min_distance)
         if min_distance > threshold:
             return 'unknow'
         index = np.argmin(e)
-
         return self.person_face_data[index][1]
 
